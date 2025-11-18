@@ -5,6 +5,7 @@ import authConfig from "./auth.config"
 import Credentials from "next-auth/providers/credentials";
 import { LoginFormSchema } from "@/schemas/Auth/LoginSchema";
 import bcrypt from "bcryptjs";
+import { getUserByEmail } from "@/actions/getUsers";
 
 // callbacks means we can control what happens when an action is performed
 // jmn login ba signup korar somoy kono specific action korte chaile callbacks use korte hoy
@@ -13,7 +14,7 @@ import bcrypt from "bcryptjs";
 export const { auth, handlers, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token }) {
-            console.log(token);
+            console.log(token); //[sub = uid]  
             return token;
         }
     },

@@ -7,12 +7,16 @@ import { Input } from "@/components/ui/input";
 import z from "zod";
 import { RegisterSchema } from "@/schemas/Auth/LoginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { Form, SubmitHandler, useForm } from "react-hook-form";
+import FormError from "./FormError";
+import FormNotification from "./FormNotification";
 
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 
 const RegisterForm = () => {
   const [isShowPassword, setIsShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [sucessMessage, setSuccessMessage] = useState("");
   const {
     register,
     handleSubmit,
@@ -26,8 +30,10 @@ const RegisterForm = () => {
   });
 
   const onSubmit: SubmitHandler<RegisterInput> = async (data) => {
-    console.log(data, "data");
-    const response = await fetch("/api/auth/register", {
+    console.log(data);
+    setError("");
+    setSuccessMessage("");
+    const response = await fetch("/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -35,12 +41,21 @@ const RegisterForm = () => {
       body: JSON.stringify(data),
     });
     const result = await response.json();
+    if (!response.ok) {
+      setError(result.message || "Something went wrong");
+      setSuccessMessage("");
+    } else {
+      setSuccessMessage(result.message || "Login successful");
+      setError("");
+    }
     console.log(result, "result");
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, (errors) => {
+        console.log("form validation errors:", errors);
+      })}
       action=""
       className="space-y-4 mt-4"
     >
@@ -142,6 +157,8 @@ const RegisterForm = () => {
           )}
         </div>
       </div>
+      <FormError message={error} />
+      <FormNotification message={sucessMessage} />
       <div className="">
         <Button
           className="w-full cursor-pointer"

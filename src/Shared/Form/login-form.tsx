@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import FormError from "./FormError";
 import FormNotification from "./FormNotification";
 import { LoginFormSchema } from "@/schemas/Auth/LoginSchema";
-
+import { useRouter } from "next/navigation";
 
 export type LoginFormInputs = z.infer<typeof LoginFormSchema>;
 
@@ -30,11 +30,11 @@ const LoginForm = () => {
       password: "",
     },
   });
-
+  const router = useRouter();
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setError("");
     setSuccessMessage("");
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch("/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,6 +48,8 @@ const LoginForm = () => {
     } else {
       setSuccessMessage(result.message || "Login successful");
       setError("");
+      router.push("/settings");
+      router.refresh();
     }
   };
 
@@ -114,7 +116,11 @@ const LoginForm = () => {
       <FormError message={error} />
       <FormNotification message={sucessMessage} />
       <div className="">
-        <Button className="w-full cursor-pointer" type="submit" aria-label="Submit">
+        <Button
+          className="w-full cursor-pointer"
+          type="submit"
+          aria-label="Submit"
+        >
           Sign In
         </Button>
         <p className="text-xs text-gray-600 mt-6">

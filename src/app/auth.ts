@@ -1,4 +1,3 @@
-import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import authConfig from "./auth.config"
@@ -12,8 +11,33 @@ import bcrypt from "bcryptjs";
 
 // Here token from session and the jwt token is same , and session is just the user
 
+
+
+// Session type
+import NextAuth, { type DefaultSession } from "next-auth";
+import { Role } from "@prisma/client";
+
+export type ExtendedUSer = DefaultSession["user"] & {
+    role: Role
+    uid: string
+}
+
+declare module "next-auth" {
+    interface Session {
+        user: ExtendedUSer
+    }
+}
+
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
     callbacks: {
+        async signIn({ user }) {
+            const getUser = await prisma.user.findUnique({
+                where: { id: user.id }
+            })
+            if (!getUser || !getUser?.emailVerified) return false
+            return true
+        },
         async session({ token, session }) {
             if (token.sub && session.user) {
                 session.user.uid = token.sub;
@@ -25,7 +49,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     session.user.role = getUser?.role;
                 }
             }
-            console.log(token);
             return session;
         },
     },

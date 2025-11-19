@@ -5,18 +5,29 @@ import authConfig from "./auth.config"
 import Credentials from "next-auth/providers/credentials";
 import { LoginFormSchema } from "@/schemas/Auth/LoginSchema";
 import bcrypt from "bcryptjs";
-import { getUserByEmail } from "@/actions/getUsers";
 
 // callbacks means we can control what happens when an action is performed
 // jmn login ba signup korar somoy kono specific action korte chaile callbacks use korte hoy
 // session = await auth() [means user details]
 
+// Here token from session and the jwt token is same , and session is just the user
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
     callbacks: {
-        async jwt({ token }) {
-            console.log(token); //[sub = uid]  
-            return token;
-        }
+        async session({ token, session }) {
+            if (token.sub && session.user) {
+                session.user.uid = token.sub;
+                const getUser = await prisma.user.findUnique({
+                    where: { id: token.sub }
+                })
+                if (getUser) {
+                    token.role = getUser?.role;
+                    session.user.role = getUser?.role;
+                }
+            }
+            console.log(token);
+            return session;
+        },
     },
     adapter: PrismaAdapter(prisma),
     session: { strategy: "jwt" },
@@ -29,7 +40,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     throw new Error("Invalid form data");
                 }
                 const { email, password } = validateFields.data;
-
                 const user = await prisma.user.findUnique({
                     where: { email }
                 });

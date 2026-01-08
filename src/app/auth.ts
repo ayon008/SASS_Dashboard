@@ -4,6 +4,7 @@ import authConfig from "./auth.config"
 import Credentials from "next-auth/providers/credentials";
 import { LoginFormSchema } from "@/schemas/Auth/LoginSchema";
 import bcrypt from "bcryptjs";
+import Google from "next-auth/providers/google";
 
 // callbacks means we can control what happens when an action is performed
 // jmn login ba signup korar somoy kono specific action korte chaile callbacks use korte hoy
@@ -56,6 +57,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     session: { strategy: "jwt" },
     ...authConfig,
     providers: [
+        Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET
+        }),
         Credentials({
             async authorize(credentials) {
                 const validateFields = LoginFormSchema.safeParse(credentials);
